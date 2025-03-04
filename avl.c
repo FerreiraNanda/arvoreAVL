@@ -1,7 +1,7 @@
+#include "avl.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "avl.h"
 
 struct no{
     int chave;
@@ -54,30 +54,6 @@ int fatorBalanceador(No* no){
     return altura(no -> esquerdo) - altura(no -> direito);
 }
 
-No* balanceamento(No* no){
-    int fb = fatorBalanceador(no);
-
-    if(fb > 1 && fatorBalanceador(no->esquerdo) >= 0){
-        return rotacaoDireita(no);
-    }
-
-    if(fb < -1 && fatorBalanceador(no->direito) <= 0){
-        return rotacaoEsquerda(no);
-    }
-
-    if(fb > 1 && fatorBalanceador(no->esquerdo) < 0){
-        no->esquerdo = rotacaoEsquerda(no->esquerdo);
-        return rotacaoDireita(no);
-    }
-
-    if(fb < -1 && fatorBalanceador(no->direito) > 0){
-        no->direito = rotacaoDireita(no->direito);
-        return rotacaoEsquerda(no);
-    }
-
-    return no;
-}
-
 No* rotacaoDireita(No* r){
     No* y = r -> esquerdo;
     No* x = y -> direito;
@@ -104,6 +80,42 @@ No* rotacaoEsquerda(No* r){
     return y;
 }
 
+/*No* esquerdaDireita (No* no){
+
+    no -> esquerdo = rotacaoEsquerda(no -> esquerdo);
+    return rotacaoDireita(no);
+}*/
+
+/*No* direitaEsquerda (No* no){
+
+    no -> direito = rotacaoDireita(no -> direito);
+    return rotacaoEsquerda(no);
+} */
+
+No* balanceamento(No* no){
+    int fb = fatorBalanceador(no);
+
+    if(fb > 1 && fatorBalanceador(no->esquerdo) >= 0){
+        return rotacaoDireita(no);
+    }
+
+    if(fb < -1 && fatorBalanceador(no->direito) <= 0){
+        return rotacaoEsquerda(no);
+    }
+
+    if(fb > 1 && fatorBalanceador(no->esquerdo) < 0){
+        no->esquerdo = rotacaoEsquerda(no->esquerdo);
+        return rotacaoDireita(no);
+    }
+
+    if(fb < -1 && fatorBalanceador(no->direito) > 0){
+        no->direito = rotacaoDireita(no->direito);
+        return rotacaoEsquerda(no);
+    }
+
+    return no;
+}
+
 No* insereNo(No* no, int chave){
     if(no == NULL){
         return cria(chave);
@@ -128,18 +140,18 @@ No* inserirArquivo(const char* nArquivo, No* raiz) {
 
     if (arquivo == NULL) {
         printf("Erro ao abrir o arquivo!\n");
-        return raiz;
+        return 0;
     }
 
     char linha[1024];
     while (fgets(linha, sizeof(linha), arquivo) != NULL) {
-        char* token = strtok(linha, ";");
+        char* token = strtok(linha, ";.");
         while (token != NULL) {
             if (token != NULL && token[0] != '\0' && strspn(token, "0123456789") == strlen(token)) {
                 int chave = atoi(token);
                 raiz = insereNo(raiz, chave);
             }
-            token = strtok(NULL, ";");
+            token = strtok(NULL, ";.");
         }
     }
 
@@ -180,20 +192,19 @@ No* remover(No* no, int chave){
 }
 void imprime(No* no, int nivel, No* pai) {
     if (no != NULL) {
- 
         for (int i = 0; i < nivel; i++) {
             printf("    ");
         }
+
         if (pai == NULL) {
             printf("%d (raiz – FB: %d)\n", no->chave, fatorBalanceador(no));
         } else {
             printf("%d (pai: %d – FB: %d)\n", no->chave, pai->chave, fatorBalanceador(no));
         }
-        imprime(no->esquerdo, nivel + 1, no);
         imprime(no->direito, nivel + 1, no);
+        imprime(no->esquerdo, nivel + 1, no);
     }
 }
-
 
 int procuraNo(No* no, int chave, No* pai){
     if(no == NULL){
@@ -231,3 +242,10 @@ int procuraNo(No* no, int chave, No* pai){
     }
 }
 
+void libera(No* no){
+    if (no != NULL){
+        libera(no->direito);
+        libera(no ->esquerdo);
+        free(no);
+    }
+}
